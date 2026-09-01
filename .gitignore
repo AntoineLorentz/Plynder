@@ -1,0 +1,79 @@
+# ── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[codz]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# ── Tooling caches ───────────────────────────────────────────────────────────
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+htmlcov/
+coverage.xml
+
+# ── Virtual environments ─────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Type checkers / notebooks ────────────────────────────────────────────────
+.dmypy.json
+dmypy.json
+.ipynb_checkpoints/
+
+# ── Secrets / local env ──────────────────────────────────────────────────────
+.env
+.envrc
+.pypirc
+
+# ── Agent / editor local config (not part of the project) ────────────────────
+.claude/
+.agents/
+.vscode/
+.cursorignore
+.cursorindexingignore
+
+# ── Agent-internal docs (kept locally for personal use, not published) ───────
+/CLAUDE.md
+/PROGRAM.md
+/TODO.md
+/CACHE.md
+/DIARY.md
+/rl_algo.md
+/CLEANUP_PLAN.md
+
+# ── Project runtime artifacts (large, generated, or machine-specific) ────────
+# Trained model checkpoints
+/models/
+/checkpoint-*
+
+# Logs, traces, experiment databases
+/logs/
+*.log
+
+# MLflow / experiment outputs
+/outputs/
+/out/
+
+# Runtime opening state
+/openings_patience.jsonl
+
+# Local data (recorded batches, etc.)
+/data/
+
+# Stockfish engine binary (download separately; see README)
+/stockfish/
+
+# Stockfish tournament output log
+/experiments.jsonl
+
+# Rust build output
+/rust_extension/target/

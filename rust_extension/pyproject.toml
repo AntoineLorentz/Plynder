@@ -1,0 +1,16 @@
+[project]
+name = "plynder_rs"
+version = "0.1.0"
+description = "High-performance chess rules engine for Plynder (PyO3 bindings)"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.uv]
+cache-keys = [
+  { file = "src/**/*.rs" }
+]
+
+[build-system]
+requires = ["maturin>=1.0,<2.0", "torch==2.10.0"]
+build-backend = "maturin"

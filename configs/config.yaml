@@ -1,0 +1,118 @@
+# Plynder reference configuration. The released 50M model was trained with
+# these values: CISPO with IS mask, 50M parameters, 30 days).
+#
+# All paths are relative to the repository root. Run every process from there.
+# Override anything from the CLI, e.g.:
+#   uv run accelerate launch --config_file configs/accelerate.yaml \
+#     src/plynder/train/main.py training.optimizer.learning_rate=5e-4
+
+experience_name: "plynder_cispo_50M"
+
+# Networking configuration
+networking:
+  train_ip: "127.0.0.1"      # Trainer address (rollout/eval connect to this). Set to the trainer host IP for multi-node.
+  rollout_topic: "rollout"
+  eval_topic: "eval"
+  synchronize: True
+  ports:
+    control: 5554            # Control messages (synchronize, shutdown)
+    samples: 5555            # Trainer pulls trajectories from rollout
+    model: 5556              # Trainer publishes model updates
+    stats: 5557              # Stats channel (trainer/rollout)
+    microbatch_assignment: 5558  # Microbatch sampler (trainer-internal)
+    model_rollout: 5559      # Rollout republishes model to vLLM workers (collective RPC)
+    samples_rollout: 5560    # Rollout workers + Rust backend push to the Sender
+
+# Paths configuration (relative to the repository root)
+paths:
+  logs: "logs/plynder"
+  model_config: "model_configs/qwen3_50M_512_16"
+  tokenizer_path: "models/plynder_tokenizer"
+  stockfish_path: "stockfish/stockfish-ubuntu-x86-64-avx2"
+  rankings_json: "rankings.json"
+  openings_jsonl: "openings.jsonl"
+  checkpoints: "models/${experience_name}"
+  mlflow_tracking_uri: "sqlite:///logs/mlflow.db?timeout=60"  # 3 slashes = relative; 4 = absolute
+
+# Buffer configuration
+buffers:
+  samples_buffer: 64            # Trajectories per PyArrow record (must be identical in training and rollout)
+  samples_buffering_sampler: 16384  # Must be divisible by total_batch_size
+  ring_record_capacity: 1280
+
+# LMDB configuration
+lmdb:
+  db_path: "/dev/shm/msgbuf"    # Linux tmpfs; any writable path works (SSD = slower)
+  map_size: 80737418240         # 80GB, sized for available RAM/tmpfs
+
+# Parallelism configuration
+parallelism:
+  dataloader_num_workers: 2
+
+# Training configuration
+training:
+  optimizer:
+    learning_rate: 7e-4
+    start_learning_rate: null
+    lr_decay_steps: null
+    adam_beta1: 0.9
+    adam_beta2: 0.999
+    adam_weight_decay: 1e-3
+    adam_epsilon: 1e-8
+    gradient_clipping: null
+
+  batching:
+    total_batch_size: 8192
+    microbatch_max_tokens: 50_000
+
+  checkpoint:
+    save_steps: 5_000
+    archive_steps: 20_000
+
+  seed: 42
+
+  # CISPO hyperparameters (values used to train the released model)
+  cispo_epsilon_low: 0.1
+  cispo_epsilon_high: 0.2
+  cispo_use_mask: true
+
+  send_model_frequency: 8
+  training_time: 2592000        # 30 days in seconds (released model); use e.g. 43200 for 12h
+
+# Rollout configuration
+rollout:
+  vllm:
+    num_engines_per_gpu: 3
+    kv_cache_memory_bytes: 4368709120  # 4GB
+    max_concurrent_groups: 72
+
+  sampling:
+    group_size: 16
+    temperature: 1.0
+    data_timeout: 900
+    max_tokens: 8000
+    opening_abandonment_threshold: 5
+    probability_retry_discarded_opening: 0.02
+
+# Evaluation configuration
+evaluation:
+  temperature: 1e-4
+  start_ranking: 0
+  num_matches: 4096
+  num_workers: 12
+  concurrent_per_worker: 8
+
+# Profiler configuration (torch.profiler for Chrome trace visualization)
+profiler:
+  enabled: false
+  wait_steps: 0
+  warmup_steps: 2
+  active_steps: 5
+  record_shapes: false
+  profile_memory: true
+  with_stack: true
+  with_flops: true
+  output_dir: null
+
+# Logging
+log_file: null
